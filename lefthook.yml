@@ -2,9 +2,9 @@ pre-commit:
   parallel: true
   jobs:
     - name: eslint
-      glob: "*.{js,jsx,ts,tsx}"
+      glob: '*.{js,jsx,ts,tsx}'
       run: pnpm exec eslint {staged_files}
 
     - name: prettier
-      glob: "*.{js,jsx,ts,tsx,json,css,md}"
+      glob: '*.{js,jsx,ts,tsx,json,css,md}'
       run: pnpm exec prettier --check {staged_files}
