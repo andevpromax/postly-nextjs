@@ -2,7 +2,7 @@
 // @ts-nocheck
 
 import sql from 'better-sqlite3'
-import { CreatePost, PostProps } from '@/types/post'
+import { CreatePost, Post } from '@/types/post'
 const db = new sql('posts.db')
 import type { RunResult } from 'better-sqlite3'
 import { getS3ImageUrl } from '@/lib/s3'
@@ -53,8 +53,9 @@ function initDb() {
 
 initDb()
 
-type PostRow = PostProps & {
+type PostRow = Omit<Post, 'isLiked'> & {
   s3Key: string | null
+  isLiked: number
 }
 
 export async function getPosts(maxNumber: number) {
@@ -81,6 +82,7 @@ export async function getPosts(maxNumber: number) {
     posts.map(async (post) => ({
       ...post,
       imageS3: post.s3Key ? await getS3ImageUrl(post.s3Key) : null,
+      isLiked: Boolean(post.isLiked),
     })),
   )
 

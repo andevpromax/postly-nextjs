@@ -2,7 +2,7 @@ export type Post = {
   id: number
   title: string
   image: string
-  imageS3: string
+  imageS3?: string | null
   userFirstName: string
   content: string
   createdAt: string
