@@ -37,7 +37,7 @@ export async function createPost(prevSate: FormState, formData: FormData) {
   try {
     imageUrl = await uploadImage(image)
   } catch (error) {
-    console.log('ERROR', error)
+    console.error('ERROR', error)
     throw new Error('Image upload failed, post was not created. Please try again later.')
   }
 
@@ -48,6 +48,7 @@ export async function createPost(prevSate: FormState, formData: FormData) {
     userId: 1,
   })
 
+  revalidatePath('/', 'layout')
   redirect('/feed')
 }
 
