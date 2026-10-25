@@ -5,6 +5,7 @@ import sql from 'better-sqlite3'
 import { CreatePost, PostProps } from '@/types/post'
 const db = new sql('posts.db')
 import type { RunResult } from 'better-sqlite3'
+import { getS3ImageUrl } from '@/lib/s3'
 
 function initDb() {
   db.exec(`
@@ -18,6 +19,7 @@ function initDb() {
     CREATE TABLE IF NOT EXISTS posts (
       id INTEGER PRIMARY KEY, 
       image_url TEXT NOT NULL,
+      s3_key TEXT,
       title TEXT NOT NULL, 
       content TEXT NOT NULL, 
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -51,6 +53,10 @@ function initDb() {
 
 initDb()
 
+type PostRow = PostProps & {
+  s3Key: string | null
+}
+
 export async function getPosts(maxNumber: number) {
   let limitClause = ''
 
@@ -59,7 +65,7 @@ export async function getPosts(maxNumber: number) {
   }
 
   const stmt = db.prepare(`
-    SELECT posts.id, image_url AS image, title, content, created_at AS createdAt, first_name AS userFirstName, last_name AS userLastName, COUNT(likes.post_id) AS likes, EXISTS(SELECT * FROM likes WHERE likes.post_id = posts.id and likes.user_id = 2) AS isLiked
+    SELECT posts.id, image_url AS image, s3_key AS s3Key,  title, content, created_at AS createdAt, first_name AS userFirstName, last_name AS userLastName, COUNT(likes.post_id) AS likes, EXISTS(SELECT * FROM likes WHERE likes.post_id = posts.id and likes.user_id = 2) AS isLiked
     FROM posts
     INNER JOIN users ON posts.user_id = users.id
     LEFT JOIN likes ON posts.id = likes.post_id
@@ -68,15 +74,27 @@ export async function getPosts(maxNumber: number) {
     ${limitClause}`)
 
   await new Promise((resolve) => setTimeout(resolve, 1000))
-  return maxNumber ? stmt.all(maxNumber) : stmt.all()
+
+  const posts = (maxNumber ? stmt.all(maxNumber) : stmt.all()) as PostRow[]
+
+  const postsWithS3Images = Promise.all(
+    posts.map(async (post) => ({
+      ...post,
+      imageS3: post.s3Key ? await getS3ImageUrl(post.s3Key) : null,
+    })),
+  )
+
+  return postsWithS3Images
+
+  // return maxNumber ? stmt.all(maxNumber) : stmt.all()
 }
 
 export async function storePost(post: CreatePost): Promise<RunResult> {
   const stmt = db.prepare(`
-    INSERT INTO posts (image_url, title, content, user_id)
-    VALUES (?, ?, ?, ?)`)
+    INSERT INTO posts (image_url, s3_key, title, content, user_id)
+    VALUES (?, ?, ?, ?, ?)`)
   await new Promise((resolve) => setTimeout(resolve, 1000))
-  return stmt.run(post.imageUrl, post.title, post.content, post.userId)
+  return stmt.run(post.imageUrl, post.s3Key, post.title, post.content, post.userId)
 }
 
 export async function updatePostLikeStatus(postId, userId) {

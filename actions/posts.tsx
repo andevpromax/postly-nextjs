@@ -1,0 +1,64 @@
+'use server'
+
+import { storePost, updatePostLikeStatus } from '@/lib/posts'
+import { redirect } from 'next/navigation'
+import { uploadImage } from '@/lib/cloudinary'
+import { uploadToS3 } from '@/lib/s3'
+import { revalidatePath } from 'next/cache'
+// import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+
+type FormState = {
+  errors: string[]
+}
+
+export async function createPost(prevSate: FormState, formData: FormData) {
+  const title = formData.get('title') as string
+  const image = formData.get('image') as File
+  const content = formData.get('content') as string
+
+  const errors = []
+
+  if (!title || title.trim().length === 0) {
+    errors.push('Title is required')
+  }
+
+  if (!image || image.size === 0) {
+    errors.push('Image is required!')
+  }
+
+  if (!content || content.trim().length === 0) {
+    errors.push('Content is required!')
+  }
+
+  if (errors.length > 0) {
+    return { errors }
+  }
+
+  let imageUrl
+
+  try {
+    imageUrl = await uploadImage(image)
+  } catch (error) {
+    console.log('ERROR', error)
+    throw new Error('Image upload failed, post was not created. Please try again later.')
+  }
+
+  const s3Key = await uploadToS3(image)
+  console.log('S3 uploaded:', s3Key)
+
+  await storePost({
+    imageUrl: imageUrl,
+    s3Key,
+    title,
+    content,
+    userId: 1,
+  })
+
+  redirect('/feed')
+}
+
+export async function togglePostLikeStatus(postId: number) {
+  updatePostLikeStatus(postId, 2)
+
+  revalidatePath('/', 'layout')
+}

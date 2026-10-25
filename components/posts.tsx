@@ -1,12 +1,20 @@
 import { formatDate } from '@/lib/format'
 import LikeButton from './like-icon'
 import { PostProps, PostsProps } from '@/types/post'
+import { togglePostLikeStatus } from '@/actions/posts'
 
 function Post({ post }: PostProps) {
   return (
     <article className="post">
-      <div className="post-image">
+      {/* <div className="post-image">
         <img src={post.image} alt={post.title} />
+      </div> */}
+      <div className="post-image">
+        <h3>Cloudinary</h3>
+        <img src={post.image} alt="Cloudinary" />
+
+        <h3>Amazon S3</h3>
+        {post.imageS3 && <img src={post.imageS3} alt="Amazon S3" />}
       </div>
       <div className="post-content">
         <header>
@@ -18,7 +26,12 @@ function Post({ post }: PostProps) {
             </p>
           </div>
           <div>
-            <LikeButton />
+            <form
+              action={togglePostLikeStatus.bind(null, post.id)}
+              className={post.isLiked ? 'liked' : ''}
+            >
+              <LikeButton />
+            </form>
           </div>
         </header>
         <p>{post.content}</p>
