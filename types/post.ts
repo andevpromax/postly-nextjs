@@ -7,6 +7,7 @@ export type Post = {
   content: string
   createdAt: string
   isLiked: boolean
+  likes: number
 }
 
 export type CreatePost = {
@@ -19,6 +20,7 @@ export type CreatePost = {
 
 export type PostProps = {
   post: Post
+  action: (postId: number) => Promise<void>
 }
 
 export type PostsProps = {
