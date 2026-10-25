@@ -12,7 +12,7 @@ export type Post = {
 
 export type CreatePost = {
   imageUrl: string
-  s3Key: string
+  s3Key?: string
   title: string
   content: string
   userId: number
@@ -20,7 +20,7 @@ export type CreatePost = {
 
 export type PostProps = {
   post: Post
-  action: (postId: number) => Promise<void>
+  // action: (postId: number) => Promise<void>
 }
 
 export type PostsProps = {

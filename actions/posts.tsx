@@ -3,9 +3,7 @@
 import { storePost, updatePostLikeStatus } from '@/lib/posts'
 import { redirect } from 'next/navigation'
 import { uploadImage } from '@/lib/cloudinary'
-import { uploadToS3 } from '@/lib/s3'
 import { revalidatePath } from 'next/cache'
-// import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 type FormState = {
   errors: string[]
@@ -43,12 +41,8 @@ export async function createPost(prevSate: FormState, formData: FormData) {
     throw new Error('Image upload failed, post was not created. Please try again later.')
   }
 
-  const s3Key = await uploadToS3(image)
-  console.log('S3 uploaded:', s3Key)
-
   await storePost({
     imageUrl: imageUrl,
-    s3Key,
     title,
     content,
     userId: 1,
