@@ -1,12 +1,13 @@
 import { formatDate } from '@/lib/format'
 import { PostProps, PostsProps } from '@/types/post'
 import FormLike from './form-like'
+import CloudinaryImage from '@/components/cloudinary-image'
 
 function Post({ post }: PostProps) {
   return (
     <article className="post">
       <div className="post-image">
-        <img src={post.image} alt={post.title} />
+        <CloudinaryImage src={post.image} alt={post.title} />
       </div>
       {/* Images to test S3 bucket */}
       {/* <div className="post-image">
@@ -43,8 +44,6 @@ export default function Posts({ posts }: PostsProps) {
   if (!posts || posts.length === 0) {
     return <p>There are no posts yet. Maybe start sharing some?</p>
   }
-
-  console.log('posts', posts)
 
   return (
     <ul className="posts">
